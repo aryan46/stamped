@@ -1,0 +1,183 @@
+/* General Reset and Body Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; /* Ensures padding doesn't affect final dimensions */
+}
+
+html, body {
+    width: 100%;
+    min-height: 100%; /* Use min-height to ensure it covers viewport */
+    background-color: #f0f2f5; /* A softer background color */
+    color: #333;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Navigation Styles */
+.nav {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    padding: 0 20px;
+    height: 60px;
+    border-bottom: 1px solid #ddd;
+}
+
+.nav .left,
+.nav .right {
+    display: flex;
+    gap: 15px; /* Spacing between buttons */
+}
+
+.nav button {
+    padding: 8px 16px;
+    border: 1px solid transparent;
+    background-color: transparent;
+    color: #555;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.nav button:hover {
+    background-color: #e9ecef;
+    color: #000;
+}
+
+/* Analysis Section */
+.analysis {
+    margin: 20px auto; /* Centered with margin top/bottom */
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    max-width: 1200px; /* Constrain width */
+}
+
+.analysis h2 {
+    margin-bottom: 20px;
+    font-size: 22px;
+    color: #333;
+}
+
+/* Bottom container for bars */
+.bottom {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Responsive grid */
+    gap: 20px;
+}
+
+/* Individual bar styling */
+.bar {
+    border: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+    background-color: #fdfdfd;
+    border-radius: 8px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+}
+
+.bar:hover {
+    border-color: #007bff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* Bar content styling */
+.bar span {
+    font-weight: 600;
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 15px;
+}
+
+.bar svg {
+    align-self: center;
+    margin-bottom: 15px;
+    color: #007bff; /* Give the icon a color */
+    flex-shrink: 0;
+    width: 28px; /* Slightly larger icon */
+    height: 28px;
+}
+
+.dataslot {
+    font-size: 36px;
+    font-weight: 700;
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
+.info {
+    font-size: 13px;
+    color: #777;
+    line-height: 1.4;
+}
+
+/* Content grid for video feeds */
+.content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 20px auto;
+}
+
+.box {
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: 1px solid #e0e0e0;
+}
+
+.vid {
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 Aspect Ratio */
+    position: relative;
+    background-color: #000;
+}
+
+.cctv {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensures video covers the area without distortion */
+    background: #222 url('https://placehold.co/600x400/000000/FFFFFF?text=Video+Feed') center/cover;
+}
+
+.down {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Responsive design adjustments */
+@media (max-width: 768px) {
+    .nav {
+        flex-direction: column;
+        height: auto;
+        padding: 15px;
+        gap: 10px;
+    }
+
+    .analysis, .content {
+        margin: 10px;
+        padding: 15px;
+    }
+
+    .dataslot {
+        font-size: 28px;
+    }
+}

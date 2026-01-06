@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crowd Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F0F4F8;
+        }
+        .marquee-container {
+            width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .marquee-text {
+            display: inline-block;
+            animation: marquee 20s linear infinite;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .status-box {
+            transition: background-color 0.5s ease-in-out;
+        }
+        .pulse-border {
+            animation: pulse-border 2s infinite;
+        }
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .map-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .map-zone {
+            position: absolute;
+            cursor: pointer;
+            border-radius: 9999px;
+            transition: all 0.3s ease-in-out;
+            border: 3px solid rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(2px);
+        }
+        .map-zone.low { background-color: rgba(34, 197, 94, 0.7); } /* Green */
+        .map-zone.medium { background-color: rgba(251, 191, 36, 0.7); } /* Yellow */
+        .map-zone.warning { background-color: rgba(249, 115, 22, 0.7); } /* Orange */
+        .map-zone.high { background-color: rgba(239, 68, 68, 0.7); } /* Red */
+        .map-zone:hover {
+            transform: scale(1.2);
+            z-index: 10;
+        }
+        @keyframes blink {
+            50% { opacity: 0.3; }
+        }
+        .map-zone.warning,
+        .map-zone.high {
+            animation: blink 1.5s linear infinite;
+        }
+    </style>
+</head>
+
+<body class="p-4 flex flex-col items-center">
+
+    <header class="w-full max-w-5xl mx-auto text-center bg-gray-900 rounded-xl shadow-md p-6 mb-8">
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-white">Temple Crowd Management System</h1>
+        <p class="text-gray-400 mt-2">Live queue status and interactive map for pilgrims.</p>
+        <div class="bg-gray-700 text-white py-2 px-4 rounded-full shadow-lg overflow-hidden mt-4">
+            <div class="marquee-container">
+                <span id="alert-marquee" class="marquee-text font-semibold">
+                    Initializing system... Please wait for real-time updates.
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-5xl mx-auto flex-grow">
+        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Live Queue Status</h2>
+        <div id="status-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        </div>
+
+        <h2 class="text-2xl font-bold text-center text-gray-800 my-8">Interactive Temple Map</h2>
+        <div class="w-full p-4 bg-gray-200 rounded-xl shadow-inner">
+            <div class="map-container relative">
+                <img id="map-image" src="{{ url_for('static', filename='images/temple_map.jpeg') }}" alt="Temple Grounds Map" class="w-full h-auto rounded-xl shadow-lg">
+                <div id="status-zone-temple_darshan_zone1" class="map-zone w-[18%] h-[12%]" style="top: 42%;left: 44%;"></div>
+                <div id="status-zone-temple_queue_cam1" class="map-zone w-[10%] h-[8%]" style="top: 60%;left: 29%;"></div>
+                <div id="status-zone-temple_queue_cam2" class="map-zone w-[10%] h-[8%]" style="top: 42%;left: 67%;"></div>
+                <div id="status-zone-temple_outer_queue1" class="map-zone w-[12%] h-[8%]" style="top: 0%;left: 28%;"></div>
+                <div id="status-zone-temple_flow_gate2" class="map-zone w-[10%] h-[7%]" style="top: 77%;left: 81%;"></div>
+            </div>
+        </div>
+
+        <div class="mt-8 flex flex-col md:flex-row items-center justify-center gap-4">
+            <button id="pilgrim-button"
+                    class="w-full md:w-auto py-4 px-6 rounded-xl font-bold text-lg text-white bg-gray-400 hover:bg-red-600 transition-all duration-300 cursor-not-allowed opacity-50"
+                    disabled>
+                Avoid Heavy Crowd: See Safer Areas
+            </button>
+        </div>
+    </main>
+
+    <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-80">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md text-left border-2 border-red-500">
+            <h3 class="text-2xl font-bold mb-2 text-red-600">High Crowd Alert!</h3>
+            <p class="text-gray-700 mb-6">For your safety, please consider moving towards these less crowded, safer areas:</p>
+            
+            <div id="safe-zones-list" class="space-y-3 mb-6">
+                </div>
+
+            <button id="close-modal" class="w-full py-3 px-6 bg-red-500 hover:bg-red-600 rounded-lg font-semibold text-white">Close</button>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const alertMarquee = document.getElementById('alert-marquee');
+            const pilgrimButton = document.getElementById('pilgrim-button');
+            const modal = document.getElementById('modal');
+            const closeModalBtn = document.getElementById('close-modal');
+            const statusContainer = document.getElementById('status-container');
+            // --- KEY CHANGE 2: Get a reference to the new list container in the modal ---
+            const safeZonesList = document.getElementById('safe-zones-list');
+            
+            // --- KEY CHANGE 3: Store the latest data in a global scope ---
+            let latestStatusData = {};
+
+            const cameraNames = {
+                'temple_darshan_zone1': 'Darshan Queue',
+                'temple_queue_cam1': 'Queue 1',
+                'temple_queue_cam2': 'Queue 2',
+                'temple_outer_queue1': 'Outer Queue',
+                'temple_flow_gate2': 'Gate Flow'
+            };
+
+            const createStatusBox = (cameraId, name) => {
+                const boxHtml = `
+                    <div id="status-box-${cameraId}" class="status-box p-6 rounded-xl shadow-lg bg-gray-100 text-center">
+                        <h3 class="text-xl font-bold mb-2">${name}</h3>
+                        <p class="text-sm text-gray-500"><span id="wait-label-${cameraId}">Estimated Wait: </span><span id="wait-${cameraId}" class="font-semibold">...</span></p>
+                        <p id="message-${cameraId}" class="text-lg font-bold mt-3 text-gray-700">Initializing...</p>
+                    </div>
+                `;
+                statusContainer.insertAdjacentHTML('beforeend', boxHtml);
+            };
+
+            for (const cameraId in cameraNames) {
+                createStatusBox(cameraId, cameraNames[cameraId]);
+            }
+            
+            const fetchAndUpdateData = async () => {
+                try {
+                    const response = await fetch('/api/public_status');
+                    if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
+                    const liveData = await response.json();
+                    
+                    // --- KEY CHANGE 4: Update the globally scoped data variable ---
+                    latestStatusData = liveData; 
+                    
+                    updateDashboard(liveData);
+                } catch (error) {
+                    console.error("Could not fetch status data:", error);
+                }
+            };
+
+            const updateDashboard = (liveData) => {
+                let marqueeParts = [];
+                let anyQueueHighRisk = false;
+
+                for (const cameraId in cameraNames) {
+                    const status = liveData[cameraId];
+                    if (!status) continue;
+
+                    const waitSpan = document.getElementById(`wait-${cameraId}`);
+                    const messageSpan = document.getElementById(`message-${cameraId}`);
+                    const statusBox = document.getElementById(`status-box-${cameraId}`);
+                    const mapZone = document.getElementById(`status-zone-${cameraId}`);
+                    
+                    let crowdLevelClass = '';
+                    let messageText = '';
+                    let mapZoneClass = '';
+
+                    switch (status.situation) {
+                        case "Stampede in Progress":
+                            crowdLevelClass = 'bg-red-200 text-red-800';
+                            messageText = "Stampede Alert!";
+                            mapZoneClass = 'high';
+                            anyQueueHighRisk = true;
+                            break;
+                        case "High Risk of Stampede":
+                            crowdLevelClass = 'bg-orange-200 text-orange-800';
+                            messageText = "High Risk";
+                            mapZoneClass = 'warning';
+                            anyQueueHighRisk = true;
+                            break;
+                        case "Crowded":
+                            crowdLevelClass = 'bg-yellow-200 text-yellow-800';
+                            messageText = "Crowded";
+                            mapZoneClass = 'medium';
+                            break;
+                        case "Safe":
+                        default:
+                            crowdLevelClass = 'bg-green-200 text-green-800';
+                            messageText = "Safe";
+                            mapZoneClass = 'low';
+                            break;
+                    }
+                    
+                    if (statusBox) {
+                        statusBox.className = `status-box p-6 rounded-xl shadow-lg text-center ${crowdLevelClass}`;
+                        if (messageSpan) messageSpan.textContent = messageText;
+                        const personCount = status.person_count || 0;
+                        const estimatedWait = Math.max(0, Math.floor(personCount / 20));
+                        if (waitSpan) waitSpan.textContent = `${estimatedWait} mins`;
+                    }
+
+                    if (mapZone) {
+                        mapZone.classList.remove('low', 'medium', 'high', 'warning');
+                        mapZone.classList.add(mapZoneClass);
+                    }
+                    marqueeParts.push(`${cameraNames[cameraId]}: ${status.situation}`);
+                }
+
+                alertMarquee.textContent = marqueeParts.join(' || ') || "System running normally. No alerts.";
+
+                if (anyQueueHighRisk) {
+                    pilgrimButton.disabled = false;
+                    pilgrimButton.className = 'w-full md:w-auto py-4 px-6 rounded-xl font-bold text-lg text-white bg-red-500 hover:bg-red-600 transition-all duration-300 pulse-border';
+                } else {
+                    pilgrimButton.disabled = true;
+                    pilgrimButton.className = 'w-full md:w-auto py-4 px-6 rounded-xl font-bold text-lg text-white bg-gray-400 cursor-not-allowed opacity-50';
+                }
+            };
+
+            fetchAndUpdateData();
+            setInterval(fetchAndUpdateData, 3000);
+
+            // --- KEY CHANGE 5: Updated button click listener to build the list ---
+            pilgrimButton.addEventListener('click', () => {
+                if (!pilgrimButton.disabled) {
+                    // 1. Clear any previous list items
+                    safeZonesList.innerHTML = '';
+                    let safeZonesFound = false;
+
+                    // 2. Loop through the latest data to find safe zones
+                    for (const cameraId in latestStatusData) {
+                        const status = latestStatusData[cameraId];
+                        if (status && status.situation === "Safe") {
+                            safeZonesFound = true;
+                            const friendlyName = cameraNames[cameraId] || cameraId;
+                            
+                            // 3. Create a new list item for each safe zone
+                            const listItemHtml = `
+                                <div class="bg-green-100 text-green-800 p-3 rounded-lg flex items-center transition-transform transform hover:scale-105">
+                                    <svg class="w-6 h-6 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span class="font-semibold">${friendlyName}</span>
+                                </div>
+                            `;
+                            safeZonesList.insertAdjacentHTML('beforeend', listItemHtml);
+                        }
+                    }
+
+                    // 4. If no safe zones were found, show a message
+                    if (!safeZonesFound) {
+                        const noSafeZonesHtml = `
+                            <p class="text-center text-gray-500">No areas are currently marked as safe. Please proceed with extreme caution and follow instructions from authorities.</p>
+                        `;
+                        safeZonesList.innerHTML = noSafeZonesHtml;
+                    }
+
+                    // 5. Finally, show the modal
+                    modal.classList.remove('hidden');
+                }
+            });
+            // --- END OF KEY CHANGE 5 ---
+
+            closeModalBtn.addEventListener('click', () => { modal.classList.add('hidden'); });
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) { modal.classList.add('hidden'); }
+            });
+        });
+    </script>
+</body>
+</html>

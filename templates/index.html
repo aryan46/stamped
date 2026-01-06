@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stampede Detection Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        .status-safe {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .status-crowded {
+            color: #f1c40f;
+            font-weight: bold;
+        }
+
+        .status-risk {
+            color: #e67e22;
+            font-weight: bold;
+        }
+
+        .status-stampede {
+            color: #e74c3c;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes blink-warning {
+            0% {
+                background-color: #ffdddd;
+                border-color: #e74c3c;
+            }
+
+            50% {
+                background-color: transparent;
+                border-color: #ddd;
+            }
+
+            100% {
+                background-color: #ffdddd;
+                border-color: #e74c3c;
+            }
+        }
+
+        .blinking-alert {
+            animation: blink-warning 1.5s infinite;
+            border: 1px solid;
+            border-radius: 12px;
+        }
+
+        .critical-zone-warning {
+            background-color: #fffbe6;
+            border: 1px solid #f1c40f;
+            border-radius: 12px;
+        }
+
+        #map {
+            height: 600px;
+            width: 100%;
+            margin: 20px auto;
+            border: 2px solid #333;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .legend {
+            background: white;
+            padding: 15px;
+            line-height: 2;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        .legend h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .legend p {
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+
+        .legend span {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 50%;
+            border: 2px solid #333;
+        }
+
+        /* Custom marker styles */
+        .zone-label {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-weight: bold;
+            font-size: 12px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .safe-route {
+            color: #2ecc71;
+            weight: 8;
+            opacity: 0.8;
+            animation: route-pulse 2s infinite;
+        }
+
+        @keyframes route-pulse {
+            0% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1.0;
+            }
+
+            100% {
+                opacity: 0.6;
+            }
+        }
+
+        .map-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .emergency-info {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px auto;
+            max-width: 600px;
+            text-align: center;
+            display: none;
+            animation: emergency-glow 2s infinite;
+        }
+
+        @keyframes emergency-glow {
+            0% {
+                box-shadow: 0 0 5px rgba(238, 90, 82, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(238, 90, 82, 0.8);
+            }
+
+            100% {
+                box-shadow: 0 0 5px rgba(238, 90, 82, 0.5);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="body">
+        <p style="font-weight: 500; font-size: 35px; text-align: center; padding: 20px 0;">Crowd Safety Monitor</p>
+        <div class="nav">
+            <div class="left"><button>Dashboard</button><button>Analytics</button></div>
+            <div class="right">
+                <button onclick="window.location.href='{{ url_for('admin_panel') }}'"
+                    style="background-color: #34495e; color: white;">⚙️ Admin Panel</button>
+                <!--
+                <button onclick="document.getElementById('addCamModal').style.display='block'"
+                    style="background-color: #3498db; color: white;">➕ Add Camera</button>
+                    -->
+                <button style="color: black;" onclick="window.open('{{ url_for('pilgrim_page') }}', '_blank')">Pilgrim
+                    Site</button>
+                <div id="audio-permission" style="text-align: center; margin: 10px 0;">
+                    <button id="enable-audio-btn"
+                        style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        🔔 Enable Alert Sounds
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Camera Modal -->
+        <div id="addCamModal"
+            style="display:none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5);">
+            <div
+                style="background-color: white; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 400px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+                <h3 style="margin-top:0;">Add New Camera</h3>
+                <form id="addCamForm">
+                    <div style="margin-bottom: 15px;">
+                        <label>Camera Type:</label>
+                        <select name="type" id="camType" style="width:100%; padding: 8px; margin-top:5px;"
+                            onchange="updatePlaceholder()">
+                            <option value="file">Video File</option>
+                            <option value="webcam">Webcam / USB</option>
+                            <option value="rtsp">IP Camera / Mobile (RTSP/HTTP)</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label>Label:</label>
+                        <input type="text" name="label" placeholder="e.g. Main Gate" required
+                            style="width:100%; padding: 8px; margin-top:5px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label id="sourceLabel">File Name (in videos folder):</label>
+                        <input type="text" name="source" id="sourceInput" placeholder="e.g. crowd6.mp4" required
+                            style="width:100%; padding: 8px; margin-top:5px;">
+                    </div>
+                    <div style="text-align: right;">
+                        <button type="button" onclick="document.getElementById('addCamModal').style.display='none'"
+                            style="background: #ccc; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px;">Cancel</button>
+                        <button type="submit"
+                            style="background: #2ecc71; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px;">Add
+                            Camera</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            function updatePlaceholder() {
+                const type = document.getElementById('camType').value;
+                const label = document.getElementById('sourceLabel');
+                const input = document.getElementById('sourceInput');
+                if (type === 'file') {
+                    label.innerText = "File Name (in videos folder)";
+                    input.placeholder = "crowd6.mp4";
+                } else if (type === 'webcam') {
+                    label.innerText = "Device Index";
+                    input.placeholder = "0";
+                } else {
+                    label.innerText = "Stream URL";
+                    input.placeholder = "rtsp://... or http://... ";
+                }
+            }
+
+            document.getElementById('addCamForm').onsubmit = function (e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const data = {
+                    type: formData.get('type'),
+                    label: formData.get('label'),
+                    source: formData.get('source')
+                };
+
+                fetch('/add_camera', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'ok') {
+                            location.reload(); // Simple reload to show new camera
+                        } else {
+                            alert('Error adding camera');
+                        }
+                    })
+                    .catch(err => alert('Failed to add camera'));
+            }
+        </script>
+        <div class="analysis">
+            <h2>Live System Status</h2>
+            <div class="bottom">
+                <div class="bar"><span>Overall Crowd Density</span><svg xmlns="http://www.w3.org/2000/svg" width="24"
+                        height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <div class="dataslot" id="crowd-density-slot">...</div>
+                    <div class="info">Based on worst-case zone</div>
+                </div>
+                <div class="bar" id="active-alerts-bar"><span>Active Alerts</span><svg
+                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                        <path d="M12 9v4"></path>
+                        <path d="M12 17h.01"></path>
+                    </svg>
+                    <div class="dataslot" id="active-alerts-slot">...</div>
+                    <div class="info">Stampedes in progress</div>
+                </div>
+                <div class="bar" id="critical-zones-bar"><span>Critical Zones</span><svg
+                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z">
+                        </path>
+                    </svg>
+                    <div class="dataslot" id="critical-zones-slot">...</div>
+                    <div class="info">High risk of stampede</div>
+                </div>
+                <div class="bar"><span>Monitoring Zones</span><svg xmlns="http://www.w3.org/2000/svg" width="24"
+                        height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <div class="dataslot" id="monitoring-zones-slot">...</div>
+                    <div class="info">Total active cameras</div>
+                </div>
+            </div>
+        </div>
+        <div class="content">
+            {% for cam_id in camera_ids %}<div class="box">
+                <div class="vid"><img src="{{ url_for('video_feed', camera_id=cam_id) }}"
+                        alt="Live Feed for {{ cam_id }}" class="cctv"></div>
+                <div class="down" id="status-box-{{ cam_id }}">Location: Loading... <br>Situation: Loading...</div>
+            </div>{% endfor %}
+        </div>
+        <div class="emergency-info" id="emergency-panel">
+            <h3>⚠️ EMERGENCY ROUTES ACTIVATED ⚠️</h3>
+            <p>Follow the <strong>GREEN HIGHLIGHTED PATHS</strong> to nearest safe exits</p>
+            <p>Avoid RED and ORANGE zones - Proceed to BLUE safe assembly areas</p>
+        </div>
+
+        <h2 style="text-align:center; margin-top:30px;">🛕 Live Temple Safety Map</h2>
+        <div style="position: relative;">
+            <div id="map"></div>
+            <div class="map-controls">
+                <button id="show-routes-btn" onclick="toggleSafeRoutes()"
+                    style="padding: 8px 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; display: none;">
+                    🛤️ Show Safe Routes
+                </button>
+            </div>
+        </div>
+
+        <div class="legend">
+            <h3>Zone Status Legend</h3>
+            <p><span style="background:#2ecc71"></span> Safe Zone</p>
+            <p><span style="background:#f1c40f"></span> Crowded Area</p>
+            <p><span style="background:#e67e22"></span> High Risk Zone</p>
+            <p><span style="background:#e74c3c"></span> Stampede Alert</p>
+            <p><span style="background:#3498db"></span> Safe Assembly Point</p>
+        </div>
+
+    </div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let safeRoutes = [];
+            let safeRoutesVisible = false;
+
+            const alertSound = new Audio("{{ url_for('static', filename='alert.mp3') }}");
+            alertSound.loop = true;
+            let isAlertActive = false;
+            let audioEnabled = false;
+
+            const enableAudioBtn = document.getElementById('enable-audio-btn');
+            enableAudioBtn.addEventListener('click', function () {
+                alertSound.play().then(() => {
+                    audioEnabled = true;
+                    alertSound.pause(); // Immediately pause after getting permission
+                    alertSound.currentTime = 0;
+                    enableAudioBtn.textContent = '🔊 Alerts Enabled';
+                    enableAudioBtn.style.background = '#2ecc71';
+                    setTimeout(() => {
+                        document.getElementById('audio-permission').style.display = 'none';
+                    }, 2000);
+                }).catch(error => {
+                    alert('Please allow audio autoplay in your browser settings');
+                    console.log("Audio permission denied");
+                });
+            });
+            // Initialize map with better styling
+            const map = L.map('map', {
+                zoomControl: true,
+                attributionControl: true
+            }).setView([12.9716, 77.5946], 18);
+
+            // Use a more detailed tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 20,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Define temple zones with enhanced styling and labels
+            const zones = {};
+            const zoneLabels = {};
+
+            // Create custom div icon for labels
+            function createLabelIcon(text, className = 'zone-label') {
+                return L.divIcon({
+                    className: className,
+                    html: text,
+                    iconSize: [80, 30],
+                    iconAnchor: [40, 15]
+                });
+            }
+
+            // Gate 1 - Main Entrance
+            zones.gate1 = L.circle([12.9719, 77.5946], {
+                radius: 25,
+                color: "#2ecc71",
+                fillColor: "#2ecc71",
+                fillOpacity: 0.6,
+                weight: 3
+            }).addTo(map);
+
+            zoneLabels.gate1 = L.marker([12.9719, 77.5946], {
+                icon: createLabelIcon('Gate 1<br>Main Entry')
+            }).addTo(map);
+
+            // Gate 2 - Side Entrance
+            zones.gate2 = L.circle([12.9722, 77.5950], {
+                radius: 25,
+                color: "#2ecc71",
+                fillColor: "#2ecc71",
+                fillOpacity: 0.6,
+                weight: 3
+            }).addTo(map);
+
+            zoneLabels.gate2 = L.marker([12.9722, 77.5950], {
+                icon: createLabelIcon('Gate 2<br>Side Entry')
+            }).addTo(map);
+
+            // Gate 3 - Outer Queue
+            zones.gate3 = L.circle([12.9714, 77.5953], {
+                radius: 25,
+                color: "#2ecc71",
+                fillColor: "#2ecc71",
+                fillOpacity: 0.6,
+                weight: 3
+            }).addTo(map);
+
+            zoneLabels.gate3 = L.marker([12.9714, 77.5953], {
+                icon: createLabelIcon('Gate 3<br>Outer Queue')
+            }).addTo(map);
+
+            // Darshan Hall - Main Temple Area
+            zones.darshan = L.circle([12.9718, 77.5949], {
+                radius: 35,
+                color: "#2ecc71",
+                fillColor: "#2ecc71",
+                fillOpacity: 0.6,
+                weight: 3
+            }).addTo(map);
+
+            zoneLabels.darshan = L.marker([12.9718, 77.5949], {
+                icon: createLabelIcon('Darshan Hall<br>Main Temple')
+            }).addTo(map);
+
+            // Safe Assembly Points
+            const safePoints = [
+                L.circle([12.9725, 77.5940], {
+                    radius: 15,
+                    color: "#3498db",
+                    fillColor: "#3498db",
+                    fillOpacity: 0.8,
+                    weight: 3
+                }).addTo(map),
+                L.circle([12.9710, 77.5940], {
+                    radius: 15,
+                    color: "#3498db",
+                    fillColor: "#3498db",
+                    fillOpacity: 0.8,
+                    weight: 3
+                }).addTo(map)
+            ];
+
+            // Add labels for safe points
+            L.marker([12.9725, 77.5940], {
+                icon: createLabelIcon('Safe Point A')
+            }).addTo(map);
+
+            L.marker([12.9710, 77.5940], {
+                icon: createLabelIcon('Safe Point B')
+            }).addTo(map);
+
+            const zoneToCamera = {
+                gate1: "temple_queue_cam1",
+                gate2: "temple_queue_cam2",
+                gate3: "temple_outer_queue1",
+                darshan: "temple_darshan_zone1"
+            };
+
+            // Enhanced popup content
+            function createPopupContent(zoneName, cameraId) {
+                return `
+                <div style="text-align: center; padding: 5px;">
+                    <h4 style="margin: 5px 0; color: #333;">${zoneName}</h4>
+                    <p style="margin: 5px 0; font-size: 12px;">Camera: ${cameraId}</p>
+                    <div id="popup-status-${zoneName}" style="font-weight: bold; margin: 5px 0;">Loading...</div>
+                </div>
+            `;
+            }
+
+            // Add enhanced popups
+            zones.gate1.bindPopup(createPopupContent('Gate 1 - Main Entrance', 'temple_queue_cam1'));
+            zones.gate2.bindPopup(createPopupContent('Gate 2 - Side Entrance', 'temple_queue_cam2'));
+            zones.gate3.bindPopup(createPopupContent('Gate 3 - Outer Queue', 'temple_outer_queue1'));
+            zones.darshan.bindPopup(createPopupContent('Darshan Hall', 'temple_darshan_zone1'));
+
+            // Safe route definitions
+            function createSafeRoutes() {
+                // Clear existing routes
+                safeRoutes.forEach(route => map.removeLayer(route));
+                safeRoutes = [];
+
+                // Route from Gate 1 to Safe Point A
+                const route1 = L.polyline([
+                    [12.9719, 77.5946],
+                    [12.9722, 77.5943],
+                    [12.9725, 77.5940]
+                ], {
+                    color: '#2ecc71',
+                    weight: 6,
+                    opacity: 0.8,
+                    className: 'safe-route'
+                }).addTo(map);
+
+                // Route from Gate 2 to Safe Point A  
+                const route2 = L.polyline([
+                    [12.9722, 77.5950],
+                    [12.9724, 77.5945],
+                    [12.9725, 77.5940]
+                ], {
+                    color: '#2ecc71',
+                    weight: 6,
+                    opacity: 0.8,
+                    className: 'safe-route'
+                }).addTo(map);
+
+                // Route from Gate 3 to Safe Point B
+                const route3 = L.polyline([
+                    [12.9714, 77.5953],
+                    [12.9712, 77.5948],
+                    [12.9710, 77.5940]
+                ], {
+                    color: '#2ecc71',
+                    weight: 6,
+                    opacity: 0.8,
+                    className: 'safe-route'
+                }).addTo(map);
+
+                // Route from Darshan to nearest safe points
+                const route4 = L.polyline([
+                    [12.9718, 77.5949],
+                    [12.9716, 77.5945],
+                    [12.9710, 77.5940]
+                ], {
+                    color: '#2ecc71',
+                    weight: 6,
+                    opacity: 0.8,
+                    className: 'safe-route'
+                }).addTo(map);
+
+                safeRoutes = [route1, route2, route3, route4];
+
+                // Add route labels
+                L.marker([12.9721, 77.5943], {
+                    icon: L.divIcon({
+                        className: 'route-label',
+                        html: '→ Safe Exit',
+                        iconSize: [60, 20],
+                        iconAnchor: [30, 10]
+                    })
+                }).addTo(map);
+            }
+
+            // Function to toggle safe routes
+            window.toggleSafeRoutes = function () {
+                if (safeRoutesVisible) {
+                    safeRoutes.forEach(route => map.removeLayer(route));
+                    document.getElementById('show-routes-btn').textContent = '🛤️ Show Safe Routes';
+                    safeRoutesVisible = false;
+                } else {
+                    createSafeRoutes();
+                    document.getElementById('show-routes-btn').textContent = '❌ Hide Routes';
+                    safeRoutesVisible = true;
+                }
+            };
+
+            // Enhanced zone color function
+            function setZoneColor(zoneLayer, zoneName, situation) {
+                let pulseEffect = false;
+                let color;
+                situation = situation.trim().toLowerCase();
+                switch (situation) {
+                    case 'safe':
+                        color = '#2ecc71'; // Green
+                        break;
+                    case 'crowded':
+                        color = '#f1c40f'; // Yellow
+                        break;
+                    case 'high risk of stampede':
+                        color = '#e67e22'; // Orange
+                        pulseEffect = true;
+                        break;
+                    case 'stampede in progress':
+                        color = '#e74c3c'; // Red
+                        pulseEffect = true;
+                        break;
+                    default:
+                        color = '#95a5a6'; // Grey for unknown
+                }
+
+                zoneLayer.setStyle({
+                    fillColor: color,
+                    color: pulseEffect ? '#000' : color,
+                    weight: pulseEffect ? 4 : 3,
+                    fillOpacity: pulseEffect ? 0.8 : 0.6,
+                    className: pulseEffect ? 'pulsing-zone' : ''
+                });
+
+                // Update popup content if it exists
+                const popupContent = document.getElementById(`popup-status-${zoneName}`);
+                if (popupContent) {
+                    popupContent.innerHTML = `Status: <span style="color: ${color};">${situation}</span>`;
+                }
+            }
+
+
+            function updateAllStatuses() {
+                fetch('/status/all')
+                    .then(response => response.json())
+                    .then(all_data => {
+                        let activeAlerts = 0;
+                        let criticalZones = 0;
+                        const monitoringZones = Object.keys(all_data).length;
+                        let isHighRiskPresent = false;
+                        let crowdedCount = 0;
+
+                        for (const cam_id in all_data) {
+                            if (all_data.hasOwnProperty(cam_id)) {
+                                const data = all_data[cam_id];
+                                const statusBox = document.getElementById(`status-box-${cam_id}`);
+                                const situation = data.situation || 'N/A';
+
+                                if (situation === 'Stampede in Progress') {
+                                    activeAlerts++;
+                                    isHighRiskPresent = true;
+                                } else if (situation === 'High Risk of Stampede') {
+                                    criticalZones++;
+                                    isHighRiskPresent = true;
+                                } else if (situation === 'Crowded') {
+                                    crowdedCount++;
+                                }
+
+                                if (statusBox) {
+                                    let situationClass = 'status-safe';
+                                    if (situation.includes('Stampede in Progress')) {
+                                        situationClass = 'status-stampede';
+                                    } else if (situation.includes('High Risk')) {
+                                        situationClass = 'status-risk';
+                                    } else if (situation.includes('Crowded')) { situationClass = 'status-crowded'; }
+                                    statusBox.innerHTML = `<strong>Location:</strong> ${data.location} <br> <strong>Situation:</strong> <span class="${situationClass}">${situation}</span>`;
+                                }
+                            }
+                        }
+
+                        let crowdDensityText = 'Low';
+                        let densityClass = 'status-safe';
+                        if (isHighRiskPresent) {
+                            crowdDensityText = 'High';
+                            densityClass = 'status-stampede';
+                        } else if (monitoringZones > 0 && crowdedCount === monitoringZones) {
+                            crowdDensityText = 'Medium';
+                            densityClass = 'status-crowded';
+                        }
+                        const densitySlot = document.getElementById('crowd-density-slot');
+                        densitySlot.innerHTML = `<span class="${densityClass}">${crowdDensityText}</span>`;
+
+                        document.getElementById('active-alerts-slot').innerText = activeAlerts;
+                        document.getElementById('critical-zones-slot').innerText = criticalZones;
+                        document.getElementById('monitoring-zones-slot').innerText = monitoringZones;
+
+                        const activeAlertsBar = document.getElementById('active-alerts-bar');
+                        if (activeAlerts > 0) {
+                            activeAlertsBar.classList.add('blinking-alert');
+                        } else {
+                            activeAlertsBar.classList.remove('blinking-alert');
+                        }
+
+                        const criticalZonesBar = document.getElementById('critical-zones-bar');
+                        if (criticalZones > 0) {
+                            criticalZonesBar.classList.add('critical-zone-warning');
+                        } else {
+                            criticalZonesBar.classList.remove('critical-zone-warning');
+                        }
+
+                        // --- MODIFIED AUDIO LOGIC ---
+                        if (audioEnabled && activeAlerts > 0 && !isAlertActive) {
+                            alertSound.play().catch(error => console.log("Audio play failed:", error));
+                            isAlertActive = true;
+                        } else if ((activeAlerts === 0 || !audioEnabled) && isAlertActive) {
+                            alertSound.pause();
+                            alertSound.currentTime = 0;
+                            isAlertActive = false;
+                        }
+
+                        for (const zone in zones) {
+                            const camId = zoneToCamera[zone];
+                            if (all_data[camId]) {
+                                setZoneColor(zones[zone], zone, all_data[camId].situation);
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Error fetching status data:', error));
+            }
+
+            setInterval(updateAllStatuses, 2000);
+            updateAllStatuses();
+        });
+    </script>
+</body>
+
+</html>

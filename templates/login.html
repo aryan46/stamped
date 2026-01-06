@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temple Guidance System - Welcome</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-image: url("{{ url_for('static', filename='temple.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+        }
+
+        .container {
+            position: relative;
+            background: rgba(10,10,10,0.7);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .access-btn {
+            display: block;
+            width: 100%;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            cursor: pointer;
+            text-align: left;
+            font-size: 1.2em;
+        }
+
+        .access-btn:hover { background-color: rgba(255,255,255,0.2); }
+
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid #555;
+            background-color: rgba(0,0,0,0.3);
+            color: white;
+        }
+
+        .title {
+        font-weight: bold;
+        font-size: 1.1em;
+    }
+
+        .subtitle {
+        font-size: 0.9em;
+        color: #ddd;
+        display: block;
+        margin-top: 5px;
+        }
+
+
+        .btn-login {
+            padding: 15px;
+            width: 100%;
+            background: #e74c3c;
+            border: none;
+            color: white;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-login:hover { background-color: #c0392b; }
+
+        .login-form, .register-form {
+            display: none;
+            text-align: left;
+        }
+
+        .error-message {
+            color: #ff8a80;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="overlay"></div>
+
+<div class="container">
+    <h1>Temple Smart Guidance System</h1>
+    <p id="welcome-text">Choose your access</p>
+
+    <!-- STEP 1: Main Role Selection -->
+    <div id="role-selection">
+        <button class="access-btn" onclick="showAuthorityOptions()">
+            🛡️ Authority Access
+        </button>
+
+        <a href="{{ url_for('pilgrim_page') }}" class="access-btn">
+    <span style="float:left; font-size:1.5em; margin-right:20px;">🚶</span>
+    <span class="title">Enter as Pilgrim</span>
+    <span class="subtitle">No Login Required</span>
+</a>
+
+    </div>
+
+    <!-- STEP 2: Authority Options -->
+    <div id="authority-options" style="display:none;">
+        <button class="access-btn" onclick="showLoginForm()">Existing User</button>
+        <button class="access-btn" onclick="showRegisterForm()">New User</button>
+    </div>
+
+    <!-- STEP 3A: LOGIN Form -->
+    <div id="login-form" class="login-form">
+        <h3>Authority Login</h3>
+        <form action="{{ url_for('login') }}" method="post">
+            <input type="text" name="username" class="form-input" placeholder="Username" required>
+            <input type="password" name="password" class="form-input" placeholder="Password" required>
+            <button type="submit" class="btn-login">Login</button>
+        </form>
+        {% if error %}
+        <p class="error-message">{{ error }}</p>
+        {% endif %}
+    </div>
+
+    <!-- STEP 3B: REGISTER Form -->
+    <div id="register-form" class="register-form">
+        <h3>New Authority Registration</h3>
+        <form action="/register" method="post">
+            <input type="text" name="new_username" class="form-input" placeholder="Choose Username" required>
+            <input type="password" name="new_password" class="form-input" placeholder="Choose Password" required>
+            <input type="email" name="email" class="form-input" placeholder="Email Address" required>
+            <button type="submit" class="btn-login">Create Account</button>
+        </form>
+    </div>
+
+    <!--this is addign camera for new user-->
+    <div id="add-camera-form" style="display:none; text-align:left;">
+
+    <h3>Add Camera</h3>
+
+    <form action="/add_camera" method="post">
+
+        <input type="text" name="camera_name" class="form-input"
+               placeholder="Camera Name (e.g., Gate 1)" required>
+
+        <input type="text" name="rtsp_url" class="form-input"
+               placeholder="RTSP URL (rtsp://...)" required>
+
+        <input type="text" name="cam_username" class="form-input"
+               placeholder="Camera Username (optional)">
+
+        <input type="password" name="cam_password" class="form-input"
+               placeholder="Camera Password (optional)">
+
+        <select name="zone_type" class="form-input" required>
+            <option value="" disabled selected>Select Zone Type</option>
+            <option value="darshan">Darshan Hall</option>
+            <option value="queue">Queue Line</option>
+            <option value="gate">Gate / Exit</option>
+            <option value="outer">Outer Area</option>
+        </select>
+
+        <button type="submit" class="btn-login">Save Camera</button>
+    </form>
+
+</div>
+
+</div>
+
+<script>
+    function showAuthorityOptions() {
+        document.getElementById("role-selection").style.display = "none";
+        document.getElementById("authority-options").style.display = "block";
+        document.getElementById("welcome-text").innerText = "Authority Portal";
+    }
+
+    function showLoginForm() {
+        document.getElementById("authority-options").style.display = "none";
+        document.getElementById("login-form").style.display = "block";
+        document.getElementById("welcome-text").innerText = "Authority Login";
+    }
+
+    function showRegisterForm() {
+        document.getElementById("authority-options").style.display = "none";
+        document.getElementById("register-form").style.display = "block";
+        document.getElementById("welcome-text").innerText = "Register New Authority";
+    }
+
+    function showAddCameraForm() {
+        document.getElementById("register-form").style.display = "none";
+        document.getElementById("add-camera-form").style.display = "block";
+        welcomeText.innerText = "Add Camera to Start";
+    }
+
+    {% if show_add_camera %}
+        showAddCameraForm();
+    {% endif %}
+
+</script>
+
+</body>
+</html>
