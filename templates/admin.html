@@ -4,211 +4,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Stampede Detection</title>
+    <title>Admin Panel - CrowdSafe</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        body {
-            background-color: #f4f7f6;
-            color: #333;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .header {
-            background: #2c3e50;
-            color: white;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 30px auto;
-            padding: 20px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-
-        .card h2 {
-            margin-top: 0;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        input,
-        select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background 0.3s;
-        }
-
-        .btn-primary {
-            background: #3498db;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #2980b9;
-        }
-
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #95a5a6;
-            color: white;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        th,
-        td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        th {
-            background-color: #f8f9fa;
-        }
-
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .status-active {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .helper-text {
-            font-size: 0.85em;
-            color: #666;
-            margin-top: 5px;
-        }
-    </style>
+    <!-- Icons -->
+    <link href="https://unpkg.com/lucide-icons/dist/umd/lucide.js" rel="stylesheet">
 </head>
 
 <body>
-
-    <div class="header">
-        <h1>🔧 System Administration</h1>
-        <div>
-            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Back to Dashboard</a>
-            <a href="{{ url_for('logout') }}" class="btn btn-danger" style="margin-left: 10px;">Logout</a>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="brand">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-settings">
+                <path
+                    d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                <circle cx="12" cy="12" r="3" />
+            </svg>
+            System Administration
         </div>
-    </div>
-
-    <div class="container">
-
-        <!-- Add Camera Section -->
-        <div class="card">
-            <h2>Add New Camera Source</h2>
-            <form id="addCamForm">
-                <div class="form-group">
-                    <label>Source Type</label>
-                    <select name="type" id="camType" onchange="updatePlaceholder()">
-                        <option value="file">📂 Video File</option>
-                        <option value="rtsp">📱 IP Camera / Mobile (RTSP/HTTP)</option>
-                        <option value="youtube">▶️ YouTube URL</option>
-                        <option value="webcam">📷 USB Webcam</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Camera Label (Location Name)</label>
-                    <input type="text" name="label" placeholder="e.g. Main Gate, North Entrance" required>
-                </div>
-
-                <div class="form-group">
-                    <label id="sourceLabel">File Path / URL</label>
-                    <input type="text" name="source" id="sourceInput" placeholder="Enter source..." required>
-                    <div id="helperText" class="helper-text">Enter filename from 'videos' folder (e.g. crowd6.mp4)</div>
-                </div>
-
-                <button type="submit" class="btn btn-primary">➕ Add Camera</button>
-            </form>
+        <div class="flex-center" style="gap: 15px;">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m15 18-6-6 6-6" />
+                </svg> Back to Dashboard
+            </a>
+            <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
         </div>
+    </nav>
 
-        <!-- Active Cameras List -->
-        <div class="card">
-            <h2>Active Cameras</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Label</th>
-                        <th>Type/Source</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for cam_id, details in cameras.items() %}
-                    <tr>
-                        <td>{{ cam_id }}</td>
-                        <td><strong>{{ labels.get(cam_id, 'Unknown') }}</strong></td>
-                        <td class="source-cell" title="{{ details }}">{{ details|truncate(40) }}</td>
-                        <td><span class="status-badge status-active">Active</span></td>
-                        <td>
-                            <button onclick="removeCamera('{{ cam_id }}')" class="btn btn-danger"
-                                style="padding: 5px 10px; font-size: 14px;">Remove</button>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="5" style="text-align:center; color: #777;">No cameras active. Add one above!</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="container animate-fade-in">
+
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem;">
+
+            <!-- Add Camera Section -->
+            <div class="glass-panel" style="padding: 2rem; align-self: start;">
+                <h3 class="mb-4">Add New Camera Source</h3>
+                <form id="addCamForm">
+                    <div class="mb-4">
+                        <label style="display: block; margin-bottom: 5px;">Source Type</label>
+                        <select name="type" id="camType" class="form-control" onchange="updatePlaceholder()">
+                            <option value="file">📂 Video File</option>
+                            <option value="rtsp">📱 IP Camera / Mobile (RTSP)</option>
+                            <option value="youtube">▶️ YouTube URL</option>
+                            <option value="webcam">📷 USB Webcam</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label style="display: block; margin-bottom: 5px;">Camera Label</label>
+                        <input type="text" name="label" class="form-control"
+                            placeholder="e.g. Main Gate, North Entrance" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label id="sourceLabel" style="display: block; margin-bottom: 5px;">File Path / URL</label>
+                        <input type="text" name="source" id="sourceInput" class="form-control"
+                            placeholder="Enter source..." required>
+                        <div id="helperText" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">
+                            Enter filename from 'videos' folder (e.g. crowd6.mp4)
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M8 12h8" />
+                            <path d="M12 8v8" />
+                        </svg>
+                        Add Camera
+                    </button>
+                </form>
+            </div>
+
+            <!-- Active Cameras List -->
+            <div class="glass-panel" style="padding: 2rem;">
+                <h3 class="mb-4">Active Cameras</h3>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+                        <thead>
+                            <tr style="text-align: left; color: var(--text-muted);">
+                                <th style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">Label</th>
+                                <th style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">Type/Source
+                                </th>
+                                <th style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">Status</th>
+                                <th style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cam_id, details in cameras.items() %}
+                            <tr>
+                                <td
+                                    style="padding: 15px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 500;">
+                                    {{ labels.get(cam_id, 'Unknown') }}
+                                    <div style="font-size: 0.8rem; color: var(--text-muted);">{{ cam_id }}</div>
+                                </td>
+                                <td
+                                    style="padding: 15px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-family: monospace; font-size: 0.9rem; color: var(--text-muted);">
+                                    {{ details|truncate(40) }}
+                                </td>
+                                <td style="padding: 15px 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <span class="status-badge badge-safe">Active</span>
+                                </td>
+                                <td style="padding: 15px 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <button onclick="removeCamera('{{ cam_id }}')" class="btn btn-secondary"
+                                        style="padding: 6px 12px; font-size: 0.85rem; color: var(--status-danger);">
+                                        Remove
+                                    </button>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" style="text-align:center; padding: 2rem; color: var(--text-muted);">
+                                    No cameras active. Use the form to add one.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
-
     </div>
 
     <script>
@@ -240,8 +159,8 @@
         document.getElementById('addCamForm').onsubmit = function (e) {
             e.preventDefault();
             const btn = this.querySelector('button[type="submit"]');
-            const originalText = btn.innerText;
-            btn.innerText = "Adding...";
+            const originalHTML = btn.innerHTML;
+            btn.innerText = "Processing...";
             btn.disabled = true;
 
             const formData = new FormData(this);
@@ -262,13 +181,13 @@
                         location.reload();
                     } else {
                         alert('Error: ' + (data.message || 'Failed to add camera'));
-                        btn.innerText = originalText;
+                        btn.innerHTML = originalHTML;
                         btn.disabled = false;
                     }
                 })
                 .catch(err => {
                     alert('Connection error');
-                    btn.innerText = originalText;
+                    btn.innerHTML = originalHTML;
                     btn.disabled = false;
                 });
         }

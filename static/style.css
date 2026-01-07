@@ -1,183 +1,423 @@
-/* General Reset and Body Styles */
+/* Modern Design System - Crowd Safety Platform */
+@import url('https://fonts.googleapis.com/css2?family=outfit:wght@300;400;500;600;700&family=inter:wght@300;400;500;600&display=swap');
+
+:root {
+    /* Color Palette - Modern Dark Theme */
+    --bg-body: #0f172a;
+    /* Slate 900 */
+    --bg-surface: #1e293b;
+    /* Slate 800 */
+    --bg-surface-hover: #334155;
+    /* Slate 700 */
+    --bg-glass: rgba(30, 41, 59, 0.7);
+
+    --text-main: #f8fafc;
+    /* Slate 50 */
+    --text-muted: #94a3b8;
+    /* Slate 400 */
+
+    --primary: #3b82f6;
+    /* Blue 500 */
+    --primary-hover: #2563eb;
+    /* Blue 600 */
+    --accent: #8b5cf6;
+    /* Violet 500 */
+
+    /* Status Colors */
+    --status-safe: #10b981;
+    /* Emerald 500 */
+    --status-warning: #f59e0b;
+    /* Amber 500 */
+    --status-danger: #ef4444;
+    /* Red 500 */
+    --status-danger-bg: rgba(239, 68, 68, 0.1);
+
+    /* Spacing & Layout */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-glow: 0 0 15px rgba(59, 130, 246, 0.5);
+}
+
+/* Reset & Base */
 * {
     margin: 0;
     padding: 0;
-    box-sizing: border-box; /* Ensures padding doesn't affect final dimensions */
+    box-sizing: border-box;
 }
 
-html, body {
-    width: 100%;
-    min-height: 100%; /* Use min-height to ensure it covers viewport */
-    background-color: #f0f2f5; /* A softer background color */
-    color: #333;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+body {
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* Navigation Styles */
-.nav {
-    width: 100%;
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.2s;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    outline: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white;
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4);
+}
+
+.btn-secondary {
+    background-color: var(--bg-surface-hover);
+    color: var(--text-main);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-secondary:hover {
+    background-color: #475569;
+}
+
+.btn-danger {
+    background-color: var(--status-danger);
+    color: white;
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+    background: var(--bg-surface);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+/* Navigation */
+.navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: white;
-    padding: 0 20px;
-    height: 60px;
-    border-bottom: 1px solid #ddd;
+    padding: 1rem 2rem;
+    background-color: rgba(15, 23, 42, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
 }
 
-.nav .left,
-.nav .right {
+.brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(to right, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     display: flex;
-    gap: 15px; /* Spacing between buttons */
+    align-items: center;
+    gap: 10px;
 }
 
-.nav button {
-    padding: 8px 16px;
-    border: 1px solid transparent;
-    background-color: transparent;
-    color: #555;
-    font-weight: 600;
-    cursor: pointer;
-    border-radius: 6px;
-    transition: background-color 0.2s, color 0.2s;
+/* Dashboard Layout */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
 }
 
-.nav button:hover {
-    background-color: #e9ecef;
-    color: #000;
-}
-
-/* Analysis Section */
-.analysis {
-    margin: 20px auto; /* Centered with margin top/bottom */
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    max-width: 1200px; /* Constrain width */
-}
-
-.analysis h2 {
-    margin-bottom: 20px;
-    font-size: 22px;
-    color: #333;
-}
-
-/* Bottom container for bars */
-.bottom {
+/* Stats Section */
+.stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Responsive grid */
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
-/* Individual bar styling */
-.bar {
-    border: 1px solid #e0e0e0;
+.stat-card {
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+}
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1;
+}
+
+.stat-info {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+}
+
+/* Camera Grid */
+.camera-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.camera-card {
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.video-container {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #000;
+    position: relative;
+}
+
+.video-feed {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.camera-info {
+    padding: 1rem;
+    background: var(--bg-surface);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Map Section */
+.map-container {
+    height: 600px;
+    width: 100%;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-lg);
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+    background: #1e293b;
+    /* Placeholder color before map loads */
+}
+
+/* Login/Landing Page */
+.login-page {
+    background-image: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.9)), url('temple.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
     padding: 20px;
-    background-color: #fdfdfd;
-    border-radius: 8px;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 450px;
+    padding: 2.5rem;
     text-align: center;
 }
 
-.bar:hover {
-    border-color: #007bff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+.input-group {
+    margin-bottom: 1.25rem;
+    text-align: left;
 }
 
-/* Bar content styling */
-.bar span {
-    font-weight: 600;
-    font-size: 16px;
-    color: #555;
-    margin-bottom: 15px;
+.form-control {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    color: white;
+    font-size: 1rem;
+    transition: border-color 0.2s;
 }
 
-.bar svg {
-    align-self: center;
-    margin-bottom: 15px;
-    color: #007bff; /* Give the icon a color */
-    flex-shrink: 0;
-    width: 28px; /* Slightly larger icon */
-    height: 28px;
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(15, 23, 42, 0.8);
 }
 
-.dataslot {
-    font-size: 36px;
+/* Status Indicators */
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
     font-weight: 700;
-    color: #007bff;
-    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-.info {
-    font-size: 13px;
-    color: #777;
-    line-height: 1.4;
+.badge-safe {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
 }
 
-/* Content grid for video feeds */
-.content {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 20px;
-    padding: 20px;
-    max-width: 1200px;
-    margin: 20px auto;
+.badge-warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
 }
 
-.box {
+.badge-danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    animation: pulse 2s infinite;
+}
+
+/* Utilities */
+.hidden {
+    display: none !important;
+}
+
+.flex-center {
     display: flex;
-    flex-direction: column;
-    background-color: #fff;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    border: 1px solid #e0e0e0;
+    align-items: center;
+    justify-content: center;
 }
 
-.vid {
-    width: 100%;
-    padding-top: 56.25%; /* 16:9 Aspect Ratio */
-    position: relative;
-    background-color: #000;
+.mb-4 {
+    margin-bottom: 1rem;
 }
 
-.cctv {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Ensures video covers the area without distortion */
-    background: #222 url('https://placehold.co/600x400/000000/FFFFFF?text=Video+Feed') center/cover;
+.mt-4 {
+    margin-top: 1rem;
 }
 
-.down {
-    padding: 15px;
-    background-color: #f8f9fa;
-    border-top: 1px solid #dee2e6;
-    font-size: 14px;
-    line-height: 1.5;
+.text-center {
+    text-align: center;
 }
 
-/* Responsive design adjustments */
-@media (max-width: 768px) {
-    .nav {
-        flex-direction: column;
-        height: auto;
-        padding: 15px;
-        gap: 10px;
+/* Animations */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
     }
 
-    .analysis, .content {
-        margin: 10px;
-        padding: 15px;
+    70% {
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
     }
 
-    .dataslot {
-        font-size: 28px;
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
     }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* Compatibility Classes for Existing JS Logic */
+.status-safe {
+    color: var(--status-safe);
+    font-weight: 700;
+}
+
+.status-crowded {
+    color: var(--status-warning);
+    font-weight: 700;
+}
+
+.status-risk {
+    color: var(--status-warning);
+    font-weight: 700;
+}
+
+.status-stampede {
+    color: var(--status-danger);
+    font-weight: 700;
+    animation: pulse 1s infinite;
+}
+
+.blinking-alert {
+    border: 1px solid var(--status-danger);
+    background-color: rgba(239, 68, 68, 0.1);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+    animation: pulse 1.5s infinite;
+}
+
+.critical-zone-warning {
+    border: 1px solid var(--status-warning);
+    background-color: rgba(245, 158, 11, 0.1);
+}
+
+.emergency-info {
+    background: linear-gradient(135deg, var(--status-danger), #b91c1c);
+    color: white;
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    margin-top: 2rem;
+    text-align: center;
+    display: none;
+    /* Controlled by JS */
+    animation: pulse 2s infinite;
+    font-weight: 600;
 }

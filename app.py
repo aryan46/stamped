@@ -34,7 +34,8 @@ VIDEO_DIR = BASE_DIR / "videos"
 # Structure: { 
 #   "username": {
 #       "sources": { "cam_id": "source_path" },
-#       "labels": { "cam_id": "Label" }
+#       "labels": { "cam_id": "Label" },
+#       "zone_map": { "map_zone_id": "cam_id" } # NEW: Links map polygons to cameras
 #   } 
 # }
 USER_DATA = {
@@ -144,6 +145,8 @@ def run_stampede_detection(camera_id, source_path, model):
         if STOP_EVENTS.get(camera_id) and STOP_EVENTS[camera_id].is_set():
             print(f"Stopping thread for {camera_id}")
             break
+
+
 
         ret, frame = cap.read()
         if not ret:
@@ -297,6 +300,9 @@ def remove_camera():
     return jsonify({"status": "ok"})
 
 
+
+
+
 @app.route('/add_camera', methods=['POST'])
 def add_camera():
     if not session.get('logged_in'): return jsonify({"error": "Unauthorized"}), 401
@@ -308,7 +314,6 @@ def add_camera():
     import uuid
     new_id = f"cam_{str(uuid.uuid4())[:6]}"
     
-    # Parse source
     # Parse source
     source_type = data.get('type') # 'file', 'webcam', 'rtsp', 'youtube'
     source_val = data.get('source')
@@ -378,6 +383,7 @@ def status_all():
 
 # --- Add this new route to your app.py ---
 
+
 @app.route('/api/public_status')
 def public_status():
     """
@@ -385,7 +391,12 @@ def public_status():
     This returns the full status dictionary.
     """
     # Using a lock ensures we don't read the data while it's being written
-    with locks[list(VIDEO_SOURCES.keys())[0]]:
+    # Fallback if no keys exist to avoid index error
+    if not locks:
+        return jsonify(status_data)
+        
+    first_key = list(locks.keys())[0]
+    with locks[first_key]:
         return jsonify(status_data)
 
 
@@ -393,11 +404,17 @@ def public_status():
 def gate_status():
     # This API is public for the pilgrim page
     gate_statuses = {}
-    with locks[list(VIDEO_SOURCES.keys())[0]]:
+    # Use ALL_VIDEO_SOURCES or locks
+    if not locks:
+         return jsonify(gate_statuses)
+
+    first_key = list(locks.keys())[0]
+    with locks[first_key]:
         for gate, cam_id in GATE_CAMERA_MAPPING.items():
             situation = status_data.get(cam_id, {}).get("situation", "Initializing...")
             gate_statuses[gate] = situation
     return jsonify(gate_statuses)
+
 
 @app.route('/register', methods=['POST'])
 def register():
