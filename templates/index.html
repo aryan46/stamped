@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CrowdSafe Control Center</title>
+    <title>{{ venue_name }} - Control Center</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <!-- Icons -->
@@ -22,7 +22,7 @@
                 <path d="M12 8v4" />
                 <path d="M12 16h.01" />
             </svg>
-            CrowdSafe Monitor
+            {{ venue_name }} Monitor
         </div>
         <div class="flex-center" style="gap: 15px;">
             <div id="audio-permission">
@@ -42,14 +42,15 @@
     <div class="container animate-fade-in">
 
         <!-- Stats Grid -->
-        <h2 class="mb-4">System Overview</h2>
+        <h2 class="mb-4 text-neon">System Overview</h2>
         <div class="stats-grid">
             <!-- Crowd Density Card -->
             <div class="stat-card glass-panel" id="crowd-density-bar">
                 <div class="stat-header">
                     <span>Crowd Density</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="text-neon">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                         <circle cx="9" cy="7" r="4" />
                         <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
@@ -66,7 +67,7 @@
                     <span>Active Alerts</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                        style="color: var(--status-danger);">
+                        class="text-alert">
                         <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
                         <path d="M12 9v4" />
                         <path d="M12 17h.01" />
@@ -82,7 +83,7 @@
                     <span>Critical Zones</span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                        style="color: var(--status-warning);">
+                        style="color: var(--warning-neon);">
                         <path
                             d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
                     </svg>
@@ -107,20 +108,23 @@
         </div>
 
         <!-- Camera Feeds -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2>Live Feeds</h2>
-            <!-- <button class="btn btn-primary" onclick="document.getElementById('addCamModal').style.display='flex'">+ Add Camera</button> -->
+        <div class="flex-between mb-4">
+            <h2 class="text-neon">Live Feeds</h2>
         </div>
 
         <div class="camera-grid">
             {% for cam_id in camera_ids %}
             <div class="camera-card glass-panel">
                 <div class="video-container">
-                    <img src="{{ url_for('video_feed', camera_id=cam_id) }}" alt="Live Feed for {{ cam_id }}"
-                        class="video-feed">
+                    <img src="{{ url_for('video_feed', camera_id=cam_id) }}?t={{ timestamp }}"
+                        alt="Live Feed for {{ cam_id }}" class="video-feed">
                     <div class="status-badge"
-                        style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white;">
-                        LIVE</div>
+                        style="position: absolute; top: 10px; right: 10px; background: rgba(255,0,0,0.8); color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; animation: pulse-border 1s infinite;">
+                        🔴 REC</div>
+                    <div
+                        style="position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.6); padding: 5px; border-radius: 4px; font-family: monospace; font-size: 0.7rem; color: #00f2ff;">
+                        CAM: {{ cam_id }}
+                    </div>
                 </div>
                 <div class="camera-info" id="status-box-{{ cam_id }}">
                     <div style="margin-bottom: 5px;"><strong>Location:</strong> <span
@@ -132,15 +136,15 @@
         </div>
 
         <!-- Emergency Panel -->
-        <div class="emergency-info" id="emergency-panel">
-            <h3 style="color: white; margin-bottom: 10px;">⚠️ EMERGENCY PROTOCOL ACTIVATED ⚠️</h3>
+        <div class="emergency-info glass-panel" id="emergency-panel"
+            style="border-color: var(--alert-neon); background: rgba(255, 0, 85, 0.1);">
+            <h3 style="color: var(--alert-neon); margin-bottom: 10px;">⚠️ EMERGENCY PROTOCOL ACTIVATED ⚠️</h3>
             <p>Follow enhanced routes on the map below. Proceed to Safe Assembly Points.</p>
         </div>
 
         <!-- Map Section -->
-        <div
-            style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px; margin-bottom: 20px;">
-            <h2>Live Safety Map</h2>
+        <div class="flex-between mb-4 mt-5">
+            <h2 class="text-neon">Live Safety Map</h2>
             <button id="show-routes-btn" onclick="toggleSafeRoutes()" class="btn btn-primary">
                 🛤️ Show Safe Routes
             </button>
@@ -150,24 +154,21 @@
             <div id="map"></div>
         </div>
 
-        <div class="glass-panel" style="margin-top: 20px; padding: 20px; text-align: center;">
-            <h4 style="margin-bottom: 15px;">Zone Status Legend</h4>
-            <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+        <div class="glass-panel mt-4 p-4 text-center">
+            <h4 class="mb-3">Zone Status Legend</h4>
+            <div class="flex-center" style="gap: 20px; flex-wrap: wrap;">
                 <div class="flex-center"><span
-                        style="width: 12px; height: 12px; background: #2ecc71; border-radius: 50%; margin-right: 8px;"></span>
+                        style="width: 10px; height: 10px; background: #00f2ff; border-radius: 50%; box-shadow: 0 0 10px #00f2ff; margin-right: 8px;"></span>
                     Safe</div>
                 <div class="flex-center"><span
-                        style="width: 12px; height: 12px; background: #f1c40f; border-radius: 50%; margin-right: 8px;"></span>
+                        style="width: 10px; height: 10px; background: #ffaa00; border-radius: 50%; margin-right: 8px;"></span>
                     Crowded</div>
                 <div class="flex-center"><span
-                        style="width: 12px; height: 12px; background: #e67e22; border-radius: 50%; margin-right: 8px;"></span>
+                        style="width: 10px; height: 10px; background: #ff5e00; border-radius: 50%; margin-right: 8px;"></span>
                     High Risk</div>
                 <div class="flex-center"><span
-                        style="width: 12px; height: 12px; background: #e74c3c; border-radius: 50%; margin-right: 8px;"></span>
+                        style="width: 10px; height: 10px; background: #ff0055; border-radius: 50%; box-shadow: 0 0 10px #ff0055; margin-right: 8px;"></span>
                     Stampede</div>
-                <div class="flex-center"><span
-                        style="width: 12px; height: 12px; background: #3498db; border-radius: 50%; margin-right: 8px;"></span>
-                    Safe Assembly</div>
             </div>
         </div>
 
@@ -351,10 +352,10 @@
             L.marker([12.9710, 77.5940], { icon: createLabelIcon('Safe Point B') }).addTo(map);
 
             const zoneToCamera = {
-                gate1: "temple_queue_cam1",
-                gate2: "temple_queue_cam2",
-                gate3: "temple_outer_queue1",
-                darshan: "temple_darshan_zone1"
+                gate1: "zone_gate1_queue",
+                gate2: "zone_gate2_queue",
+                gate3: "zone_outer_waiting",
+                darshan: "zone_darshan_hall"
             };
 
             // Enhanced popup content
@@ -482,6 +483,33 @@
                                 }
                             }
                         }
+
+                        // --- FETCH ANALYTICS (PREDICTIONS) ---
+                        fetch('/api/analytics')
+                            .then(res => res.json())
+                            .then(analytics_data => {
+                                for (const cam_id in analytics_data) {
+                                    const pred = analytics_data[cam_id];
+                                    const statusBox = document.getElementById(`status-box-${cam_id}`);
+                                    if (statusBox) {
+                                        // Append Prediction Info
+                                        let currentHtml = statusBox.innerHTML;
+                                        // Avoid duplicate appending if interval is fast
+                                        if (!currentHtml.includes("Forecast")) {
+                                            let forecastColor = "var(--text-muted)";
+                                            if (pred.trend.includes("Rising")) forecastColor = "#e67e22";
+                                            if (pred.time_to_full.includes("CRITICAL")) forecastColor = "#e74c3c";
+
+                                            statusBox.innerHTML += `
+                                                <div style="margin-top:5px; border-top:1px solid rgba(255,255,255,0.1); padding-top:5px;">
+                                                    <div style="font-size:0.9em;"><strong>🌊 Flow:</strong> ${pred.trend}</div>
+                                                    <div style="font-size:0.9em;"><strong>🔮 Forecast:</strong> <span style="color:${forecastColor}">${pred.time_to_full}</span></div>
+                                                </div>
+                                             `;
+                                        }
+                                    }
+                                }
+                            });
 
                         let crowdDensityText = 'Low';
                         let densityClass = 'status-safe';

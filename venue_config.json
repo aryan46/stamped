@@ -1,0 +1,78 @@
+{
+    "venue_info": {
+        "name": "City CrowdSafe Control",
+        "type": "generic"
+    },
+    "settings": {
+        "processing_interval": 3.0,
+        "default_thresholds": {
+            "max_capacity": 30,
+            "proximity_threshold": 80,
+            "high_risk": 0.6,
+            "stampede": 0.85
+        }
+    },
+    "users": {
+        "authority1": {
+            "password": "admin123",
+            "cameras": [
+                {
+                    "id": "zone_darshan_hall",
+                    "label": "Main Hall / Darshan",
+                    "source": "crowd6.mp4",
+                    "config": {
+                        "max_capacity": 25,
+                        "proximity_threshold": 90,
+                        "area_sq_meters": 3.0
+                    }
+                },
+                {
+                    "id": "zone_gate1_queue",
+                    "label": "Entry Gate 1",
+                    "source": "crowd3 (1).mp4",
+                    "config": {
+                        "max_capacity": 100,
+                        "proximity_threshold": 70,
+                        "high_risk": 0.65,
+                        "area_sq_meters": 30
+                    }
+                },
+                {
+                    "id": "zone_gate2_queue",
+                    "label": "Entry Gate 2",
+                    "source": "crowd7.mp4",
+                    "config": {
+                        "max_capacity": 100,
+                        "proximity_threshold": 70,
+                        "high_risk": 0.65,
+                        "area_sq_meters": 30
+                    }
+                },
+                {
+                    "id": "zone_outer_waiting",
+                    "label": "Outer Waiting Area",
+                    "source": "crowd8.mp4",
+                    "config": {
+                        "max_capacity": 50,
+                        "proximity_threshold": 80,
+                        "area_sq_meters": 40
+                    }
+                },
+                {
+                    "id": "zone_flow_corridor",
+                    "label": "Flow Corridor",
+                    "source": "crowd5.mp4",
+                    "config": {
+                        "max_capacity": 50,
+                        "proximity_threshold": 80,
+                        "area_sq_meters": 40
+                    }
+                }
+            ]
+        },
+        "authority2": {
+            "password": "admin234",
+            "cameras": []
+        }
+    }
+}
