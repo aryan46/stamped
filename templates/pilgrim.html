@@ -901,27 +901,10 @@
             <p class="section-subtitle">Real-time facility availability</p>
         </div>
 
-        <div class="amenities-grid">
-            <div class="amenity-card">
-                <div class="amenity-icon">🅿️</div>
-                <div class="amenity-name">Parking</div>
-                <div class="amenity-status" style="color: var(--accent-success);">Available (70%)</div>
-            </div>
-            <div class="amenity-card">
-                <div class="amenity-icon">👞</div>
-                <div class="amenity-name">Shoe Stand</div>
-                <div class="amenity-status" style="color: var(--accent-warning);">Filling Fast</div>
-            </div>
-            <div class="amenity-card">
-                <div class="amenity-icon">🚰</div>
-                <div class="amenity-name">Drinking Water</div>
-                <div class="amenity-status" style="color: var(--accent-success);">Available</div>
-            </div>
-            <div class="amenity-card">
-                <div class="amenity-icon">♿</div>
-                <div class="amenity-name">Wheelchair</div>
-                <div class="amenity-status" style="color: var(--accent-danger);">In Use</div>
-            </div>
+        <div class="amenities-grid" id="amenities-list">
+            <!-- Dynamically populated by JS -->
+            <div style="grid-column: 1/-1; text-align:center; color: var(--text-muted); padding: 2rem;">Loading
+                amenities...</div>
         </div>
 
         <!-- FAQ -->
@@ -1159,6 +1142,30 @@
 
         // --- Data Fetching ---
         function updateStatus() {
+            // Fetch Amenities
+            fetch('/api/amenities')
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.getElementById('amenities-list');
+                    let html = '';
+
+                    for (const [key, item] of Object.entries(data)) {
+                        let colorVar = '--accent-success';
+                        if (item.color === 'warning') colorVar = '--accent-warning';
+                        if (item.color === 'danger') colorVar = '--accent-danger';
+
+                        html += `
+                        <div class="amenity-card">
+                            <div class="amenity-icon">${item.icon}</div>
+                            <div class="amenity-name">${item.name}</div>
+                            <div class="amenity-status" style="color: var(${colorVar});">${item.status}</div>
+                        </div>
+                       `;
+                    }
+                    container.innerHTML = html;
+                })
+                .catch(err => console.error("Amenities error:", err));
+
             fetch('/api/public_status')
                 .then(res => res.json())
                 .then(data => {

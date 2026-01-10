@@ -108,6 +108,14 @@ status_data = {}
 locks = {} # Will be populated dynamically
 STOP_EVENTS = {} # To control thread termination
 
+# --- AMENITIES DATA STORE ---
+AMENITIES_DATA = {
+    "parking": {"id": "parking", "icon": "🅿️", "name": "Parking", "status": "Available (70%)", "color": "success"},
+    "shoe_stand": {"id": "shoe_stand", "icon": "👞", "name": "Shoe Stand", "status": "Filling Fast", "color": "warning"},
+    "water": {"id": "water", "icon": "🚰", "name": "Drinking Water", "status": "Available", "color": "success"},
+    "wheelchair": {"id": "wheelchair", "icon": "♿", "name": "Wheelchair", "status": "In Use", "color": "danger"}
+}
+
 # --- PREDICTIVE ANALYTICS ENGINE ---
 class CrowdPredictor:
     def __init__(self):
@@ -604,6 +612,27 @@ def public_status():
     first_key = list(locks.keys())[0]
     with locks[first_key]:
         return jsonify(status_data)
+
+
+@app.route('/api/amenities')
+def get_amenities():
+    return jsonify(AMENITIES_DATA)
+
+@app.route('/api/update_amenity', methods=['POST'])
+def update_amenity():
+    if not session.get('logged_in'): return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.json
+    amenity_id = data.get('id')
+    status_text = data.get('status')
+    color = data.get('color') # success, warning, danger
+    
+    if amenity_id in AMENITIES_DATA:
+        AMENITIES_DATA[amenity_id]['status'] = status_text
+        AMENITIES_DATA[amenity_id]['color'] = color
+        return jsonify({"status": "ok", "data": AMENITIES_DATA[amenity_id]})
+    
+    return jsonify({"error": "Invalid Amenity ID"}), 400
 
 
 @app.route('/api/gate_status')

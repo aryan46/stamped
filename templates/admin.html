@@ -5,45 +5,420 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - CrowdSafe</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <!-- Icons -->
-    <link href="https://unpkg.com/lucide-icons/dist/umd/lucide.js" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a0e27;
+            background-image:
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(16, 185, 129, 0.15) 0px, transparent 50%);
+            min-height: 100vh;
+            color: #e5e7eb;
+            padding: 20px;
+        }
+
+        .navbar {
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .brand svg {
+            animation: rotate 20s linear infinite;
+            filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+
+        .btn-secondary {
+            background: rgba(55, 65, 81, 0.6);
+            color: #e5e7eb;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(75, 85, 99, 0.8);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: #fff;
+            width: 100%;
+            justify-content: center;
+            padding: 14px;
+            font-size: 1rem;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.5);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+        }
+
+        h3::before {
+            content: '';
+            width: 4px;
+            height: 28px;
+            background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #d1d5db;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(31, 41, 55, 0.6);
+            color: #e5e7eb;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(31, 41, 55, 0.8);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .form-control::placeholder {
+            color: rgba(156, 163, 175, 0.6);
+        }
+
+        select.form-control {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23e5e7eb' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 40px;
+        }
+
+        select.form-control option {
+            background: #1f2937;
+            color: #e5e7eb;
+        }
+
+        .helper-text {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            margin-top: 6px;
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .helper-text::before {
+            content: 'ℹ️';
+            font-size: 0.9rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        thead tr {
+            background: rgba(31, 41, 55, 0.4);
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #9ca3af;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th:first-child {
+            border-radius: 10px 0 0 0;
+        }
+
+        th:last-child {
+            border-radius: 0 10px 0 0;
+        }
+
+        td {
+            padding: 20px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tr:hover {
+            background: rgba(55, 65, 81, 0.3);
+        }
+
+        .camera-label {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #f3f4f6;
+        }
+
+        .camera-id {
+            font-size: 0.8rem;
+            color: #6b7280;
+            font-family: 'Courier New', monospace;
+            margin-top: 4px;
+        }
+
+        .camera-source {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #9ca3af;
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .status-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .btn-remove {
+            padding: 8px 16px;
+            background: rgba(220, 38, 38, 0.15);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            color: #f87171;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-remove:hover {
+            background: rgba(220, 38, 38, 0.25);
+            border-color: rgba(220, 38, 38, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        @media (max-width: 1024px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .brand {
+                font-size: 1.1rem;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th,
+            td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
 </head>
 
 <body>
     <!-- Navbar -->
     <nav class="navbar">
         <div class="brand">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="lucide lucide-settings">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path
                     d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
                 <circle cx="12" cy="12" r="3" />
             </svg>
             System Administration
         </div>
-        <div class="flex-center" style="gap: 15px;">
+        <div class="nav-actions">
             <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="m15 18-6-6 6-6" />
-                </svg> Back to Dashboard
+                </svg>
+                Dashboard
             </a>
             <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
         </div>
     </nav>
 
-    <div class="container animate-fade-in">
-
-        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem;">
-
+    <div class="container">
+        <div class="grid">
             <!-- Add Camera Section -->
-            <div class="glass-panel" style="padding: 2rem; align-self: start;">
-                <h3 class="mb-4">Add New Camera Source</h3>
+            <div class="card">
+                <h3>Add New Camera</h3>
                 <form id="addCamForm">
-                    <div class="mb-4">
-                        <label style="display: block; margin-bottom: 5px;">Source Type</label>
+                    <div class="form-group">
+                        <label>📹 Source Type</label>
                         <select name="type" id="camType" class="form-control" onchange="updatePlaceholder()">
                             <option value="file">📂 Video File</option>
                             <option value="rtsp">📱 IP Camera / Mobile (RTSP)</option>
@@ -52,81 +427,168 @@
                         </select>
                     </div>
 
-                    <div class="mb-4">
-                        <label style="display: block; margin-bottom: 5px;">Camera Label</label>
+                    <div class="form-group">
+                        <label>🏷️ Camera Label</label>
                         <input type="text" name="label" class="form-control"
                             placeholder="e.g. Main Gate, North Entrance" required>
                     </div>
 
-                    <div class="mb-4">
-                        <label id="sourceLabel" style="display: block; margin-bottom: 5px;">File Path / URL</label>
-                        <input type="text" name="source" id="sourceInput" class="form-control"
-                            placeholder="Enter source..." required>
-                        <div id="helperText" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">
-                            Enter filename from 'videos' folder (e.g. crowd6.mp4)
+                    <div class="form-group">
+                        <label id="sourceLabel">📁 Video Filename</label>
+                        <input type="text" name="source" id="sourceInput" class="form-control" placeholder="crowd6.mp4"
+                            required>
+                        <div id="helperText" class="helper-text">
+                            File must be in the 'videos' folder within the project
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    <button type="submit" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10" />
                             <path d="M8 12h8" />
                             <path d="M12 8v8" />
                         </svg>
-                        Add Camera
+                        Add Camera Source
                     </button>
                 </form>
             </div>
 
             <!-- Active Cameras List -->
-            <div class="glass-panel" style="padding: 2rem;">
-                <h3 class="mb-4">Active Cameras</h3>
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
-                        <thead>
-                            <tr style="text-align: left; color: var(--text-muted);">
-                                <th style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">Label</th>
-                                <th style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">Type/Source
-                                </th>
-                                <th style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">Status</th>
-                                <th style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for cam_id, details in cameras.items() %}
-                            <tr>
-                                <td
-                                    style="padding: 15px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 500;">
-                                    {{ labels.get(cam_id, 'Unknown') }}
-                                    <div style="font-size: 0.8rem; color: var(--text-muted);">{{ cam_id }}</div>
-                                </td>
-                                <td
-                                    style="padding: 15px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-family: monospace; font-size: 0.9rem; color: var(--text-muted);">
-                                    {{ details|truncate(40) }}
-                                </td>
-                                <td style="padding: 15px 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                    <span class="status-badge badge-safe">Active</span>
-                                </td>
-                                <td style="padding: 15px 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                    <button onclick="removeCamera('{{ cam_id }}')" class="btn btn-secondary"
-                                        style="padding: 6px 12px; font-size: 0.85rem; color: var(--status-danger);">
-                                        Remove
-                                    </button>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="4" style="text-align:center; padding: 2rem; color: var(--text-muted);">
-                                    No cameras active. Use the form to add one.
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+            <div class="card">
+                <h3>Active Cameras</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Camera</th>
+                            <th>Source</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cameraList">
+                        {% for cam_id, details in cameras.items() %}
+                        <tr>
+                            <td>
+                                <div class="camera-label">{{ labels.get(cam_id, 'Unknown') }}</div>
+                                <div class="camera-id">{{ cam_id }}</div>
+                            </td>
+                            <td>
+                                <div class="camera-source">{{ details|truncate(40) }}</div>
+                            </td>
+                            <td>
+                                <span class="status-badge">Active</span>
+                            </td>
+                            <td>
+                                <button class="btn-remove" onclick="removeCamera('{{ cam_id }}')">Remove</button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty-state">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                    <h3>No cameras active</h3>
+                                    <p>Use the form on the left to add a camera source.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
+            <!-- Amenities Management -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <h3>Amenities Status Control</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+
+                    <div class="amenity-control"
+                        style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px;">
+                        <h4 style="margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            <span>🅿️</span> Parking
+                        </h4>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <input type="text" id="status-parking" class="form-control" placeholder="Status Text"
+                                value="Available (70%)">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <select id="color-parking" class="form-control">
+                                <option value="success" selected>🟢 Available (Green)</option>
+                                <option value="warning">🟡 Busy (Yellow)</option>
+                                <option value="danger">🔴 Full/Closed (Red)</option>
+                            </select>
+                        </div>
+                        <button onclick="updateAmenity('parking')" class="btn btn-secondary"
+                            style="width: 100%; justify-content: center; padding: 8px;">Update</button>
+                    </div>
+
+                    <div class="amenity-control"
+                        style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px;">
+                        <h4 style="margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            <span>👞</span> Shoe Stand
+                        </h4>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <input type="text" id="status-shoe_stand" class="form-control" placeholder="Status Text"
+                                value="Filling Fast">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <select id="color-shoe_stand" class="form-control">
+                                <option value="success">🟢 Available (Green)</option>
+                                <option value="warning" selected>🟡 Busy (Yellow)</option>
+                                <option value="danger">🔴 Full/Closed (Red)</option>
+                            </select>
+                        </div>
+                        <button onclick="updateAmenity('shoe_stand')" class="btn btn-secondary"
+                            style="width: 100%; justify-content: center; padding: 8px;">Update</button>
+                    </div>
+
+                    <div class="amenity-control"
+                        style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px;">
+                        <h4 style="margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            <span>🚰</span> Drinking Water
+                        </h4>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <input type="text" id="status-water" class="form-control" placeholder="Status Text"
+                                value="Available">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <select id="color-water" class="form-control">
+                                <option value="success" selected>🟢 Available (Green)</option>
+                                <option value="warning">🟡 Busy (Yellow)</option>
+                                <option value="danger">🔴 Empty/Closed (Red)</option>
+                            </select>
+                        </div>
+                        <button onclick="updateAmenity('water')" class="btn btn-secondary"
+                            style="width: 100%; justify-content: center; padding: 8px;">Update</button>
+                    </div>
+
+                    <div class="amenity-control"
+                        style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px;">
+                        <h4 style="margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            <span>♿</span> Wheelchair
+                        </h4>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <input type="text" id="status-wheelchair" class="form-control" placeholder="Status Text"
+                                value="In Use">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <select id="color-wheelchair" class="form-control">
+                                <option value="success">🟢 Available (Green)</option>
+                                <option value="warning">🟡 Busy (Yellow)</option>
+                                <option value="danger" selected>🔴 In Use/None (Red)</option>
+                            </select>
+                        </div>
+                        <button onclick="updateAmenity('wheelchair')" class="btn btn-secondary"
+                            style="width: 100%; justify-content: center; padding: 8px;">Update</button>
+                    </div>
+
+                </div>
+            </div>
         </div>
     </div>
 
@@ -137,30 +599,40 @@
             const input = document.getElementById('sourceInput');
             const helper = document.getElementById('helperText');
 
-            if (type === 'file') {
-                label.innerText = "Video Filename";
-                input.placeholder = "crowd6.mp4";
-                helper.innerText = "File must be in the 'videos' folder within the project.";
-            } else if (type === 'rtsp') {
-                label.innerText = "Stream URL (RTSP / HTTP)";
-                input.placeholder = "http://192.168.1.5:8080/video";
-                helper.innerText = "For Mobile: Use 'IP Webcam' app and enter the 'Video Renderer' URL here.";
-            } else if (type === 'youtube') {
-                label.innerText = "YouTube Video URL";
-                input.placeholder = "https://www.youtube.com/watch?v=...";
-                helper.innerText = "Standard YouTube link. Avoid live streams if possible for better stability.";
-            } else if (type === 'webcam') {
-                label.innerText = "Device Index";
-                input.placeholder = "0";
-                helper.innerText = "0 is usually the default laptop webcam. 1 is external.";
-            }
+            const configs = {
+                file: {
+                    label: "📁 Video Filename",
+                    placeholder: "crowd6.mp4",
+                    helper: "File must be in the 'videos' folder within the project"
+                },
+                rtsp: {
+                    label: "🌐 Stream URL (RTSP / HTTP)",
+                    placeholder: "http://192.168.1.5:8080/video",
+                    helper: "For Mobile: Use 'IP Webcam' app and enter the 'Video Renderer' URL here"
+                },
+                youtube: {
+                    label: "▶️ YouTube Video URL",
+                    placeholder: "https://www.youtube.com/watch?v=...",
+                    helper: "Standard YouTube link. Avoid live streams for better stability"
+                },
+                webcam: {
+                    label: "📷 Device Index",
+                    placeholder: "0",
+                    helper: "0 is usually the default laptop webcam, 1 is external USB camera"
+                }
+            };
+
+            const config = configs[type];
+            label.textContent = config.label;
+            input.placeholder = config.placeholder;
+            helper.textContent = config.helper;
         }
 
         document.getElementById('addCamForm').onsubmit = function (e) {
             e.preventDefault();
             const btn = this.querySelector('button[type="submit"]');
             const originalHTML = btn.innerHTML;
-            btn.innerText = "Processing...";
+            btn.innerHTML = '<span>⏳ Processing...</span>';
             btn.disabled = true;
 
             const formData = new FormData(this);
@@ -187,10 +659,11 @@
                 })
                 .catch(err => {
                     alert('Connection error');
+                    console.error(err);
                     btn.innerHTML = originalHTML;
                     btn.disabled = false;
                 });
-        }
+        };
 
         function removeCamera(camId) {
             if (!confirm('Are you sure you want to remove this camera?')) return;
@@ -204,8 +677,60 @@
                 .then(data => {
                     if (data.status === 'ok') location.reload();
                     else alert('Error removing camera');
+                })
+                .catch(err => {
+                    alert('Connection error');
+                    console.error(err);
                 });
         }
+
+        function updateAmenity(id) {
+            const status = document.getElementById(`status-${id}`).value;
+            const color = document.getElementById(`color-${id}`).value;
+            const btn = event.target;
+            const originalText = btn.innerText;
+
+            btn.innerText = "Saving...";
+            btn.disabled = true;
+
+            fetch('/api/update_amenity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, status, color })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        btn.innerText = "Saved ✓";
+                        setTimeout(() => {
+                            btn.innerText = "Update";
+                            btn.disabled = false;
+                        }, 1500);
+                    } else {
+                        alert('Error updating status');
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Connection failed');
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                });
+        }
+
+        // Load initial amenities status
+        fetch('/api/amenities')
+            .then(res => res.json())
+            .then(data => {
+                for (const [key, val] of Object.entries(data)) {
+                    const statusInput = document.getElementById(`status-${key}`);
+                    const colorSelect = document.getElementById(`color-${key}`);
+                    if (statusInput) statusInput.value = val.status;
+                    if (colorSelect) colorSelect.value = val.color;
+                }
+            });
     </script>
 </body>
 
